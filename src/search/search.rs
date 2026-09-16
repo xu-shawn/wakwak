@@ -392,6 +392,7 @@ fn search<Node: NodeType>(
         the king as instant losses, unless it is a repetition.
         */
         let mut move_depth = depth;
+        let roast_duck = safe != Bitboard::FULL;
         let score = if !safe.has(mv.duck()) && pos.board().hmc() < 100 && !pos.repetition() {
             // Clear the previous child's continuation because this move skips recursive search.
             thread.stack[ply + 1].pv.clear();
@@ -401,7 +402,7 @@ fn search<Node: NodeType>(
             let new_depth = depth - 1;
             let mut score = -Score::INFINITE;
             if !Node::PV || legal_moves > 1 {
-                let reduction = if depth >= 3 && searched_moves > 6 && is_quiet {
+                let reduction = if depth >= 3 && searched_moves > 6 && is_quiet && !roast_duck {
                     1
                 } else {
                     0
