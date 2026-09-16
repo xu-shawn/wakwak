@@ -222,7 +222,7 @@ impl MovePicker {
             scored.1 = mvv(board, mv) * 8
                 + thread.history.noisy(board, mv) / 8
                 + thread.history.duck(board, mv) / 8
-                + (blocking_set[mv.dest()] & mv.duck().bitboard()).is_nonempty() as i32 * 1000;
+                + (blocking_set[mv.dest()] & mv.duck().bitboard()).is_nonempty() as i32 * 6000;
         }
 
         moves[start..].sort_unstable_by_key(|m| Reverse(m.1));
