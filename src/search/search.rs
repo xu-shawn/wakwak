@@ -668,15 +668,12 @@ fn qsearch<Node: NodeType>(
         }
 
         if score > alpha {
-            alpha = score;
             thread.stack[ply].mv = Some(mv);
             if Node::PV {
                 update_pv(thread, mv, ply);
             }
 
-            if score >= beta {
-                break;
-            }
+            break;
         }
     }
 
