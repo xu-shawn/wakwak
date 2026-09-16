@@ -375,9 +375,13 @@ fn search<Node: NodeType>(
         given duck move, we can be reasonably confident that any move containing
         that duck won't be much better, so we can skip the rest of them
          */
-        if !Node::PV
-            && is_quiet
-            && depth <= Params::dcp_depth()
+        if is_quiet
+            && depth
+                <= if Node::PV {
+                    Params::dcp_depth()
+                } else {
+                    Params::dcp_depth_pv()
+                }
             && duck_counts[duck] >= Params::dcp_threshold(depth, improving) as u8
         {
             continue;
