@@ -321,7 +321,7 @@ fn search<Node: NodeType>(
 
     thread.move_stack.push_ply();
 
-    let mut best_move = None;
+    let mut best_move: Option<Move> = None;
     let mut best_move_depth = depth;
     let mut best_score = None;
     let mut legal_moves = 0;
@@ -367,6 +367,13 @@ fn search<Node: NodeType>(
         if safe == Bitboard::FULL
             && depth <= Params::ldp_depth(is_quiet)
             && ducks_by_move[src][dest] >= Params::ldp_threshold(depth, is_quiet, improving) as u8
+        {
+            continue;
+        }
+
+        if depth <= 3
+            && let Some(mv) = best_move
+            && duck == mv.dest()
         {
             continue;
         }
