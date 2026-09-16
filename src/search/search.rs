@@ -373,7 +373,8 @@ fn search<Node: NodeType>(
 
         if depth <= 3
             && let Some(mv) = best_move
-            && duck == mv.dest()
+            && (duck.bitboard() & (between(mv.src(), mv.dest()) | mv.dest().bitboard()))
+                .is_nonempty()
         {
             continue;
         }
