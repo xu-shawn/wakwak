@@ -1,5 +1,5 @@
 use crate::board::{Board, MoveFilter, Noisy, Quiet};
-use crate::common::{Move, MoveFlag, Piece};
+use crate::common::{Move, MoveFlag, Piece, Square};
 use crate::position::Position;
 use crate::search::cont::ContIndices;
 use crate::search::{MAX_PLY, Params, ThreadData};
@@ -111,16 +111,18 @@ pub enum Stage {
 pub struct MovePicker {
     stage: Stage,
     tt_move: Option<Move>,
+    last_duck: Option<Square>,
     skip_quiets: bool,
     cursor: usize,
 }
 
 impl MovePicker {
     #[inline]
-    pub fn new(tt_move: Option<Move>) -> Self {
+    pub fn new(tt_move: Option<Move>, last_duck: Option<Square>) -> Self {
         Self {
             stage: Stage::TTMove,
             tt_move,
+            last_duck,
             skip_quiets: false,
             cursor: 0,
         }
@@ -240,7 +242,14 @@ impl MovePicker {
 
             scored.1 = thread.history.quiet(board, mv)
                 + thread.history.duck(board, mv)
-                + thread.history.cont(board, indices, mv);
+                + thread.history.cont(board, indices, mv)
+                + if let Some(last_duck) = self.last_duck
+                    && last_duck == mv.duck()
+                {
+                    2000
+                } else {
+                    0
+                };
         }
 
         moves[start..].sort_unstable_by_key(|m| Reverse(m.1));

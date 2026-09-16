@@ -320,6 +320,14 @@ fn search<Node: NodeType>(
 
     thread.move_stack.push_ply();
 
+    let last_duck = if ply >= 2
+        && let Some(last_move) = thread.stack[ply - 2].mv
+    {
+        Some(last_move.duck())
+    } else {
+        None
+    };
+
     let mut best_move = None;
     let mut best_move_depth = depth;
     let mut best_score = None;
@@ -327,7 +335,7 @@ fn search<Node: NodeType>(
     let mut searched_moves = 0;
     let mut failed_quiets = Vec::new();
     let mut failed_noisies = Vec::new();
-    let mut move_picker = MovePicker::new(tt_move);
+    let mut move_picker = MovePicker::new(tt_move, last_duck);
     let mut ducks_by_move: [[u8; Square::COUNT]; Square::COUNT] =
         [[0; Square::COUNT]; Square::COUNT];
     let mut duck_counts: [u8; Square::COUNT] = [0; Square::COUNT];
