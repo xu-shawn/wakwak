@@ -335,6 +335,14 @@ fn search<Node: NodeType>(
     let mut duck_safety = [(None, Bitboard::FULL); Square::COUNT];
     let mut flag = TTFlag::Upper;
 
+    let last_duck = if ply >= 2
+        && let Some(last_move) = thread.stack[ply - 2].mv
+    {
+        Some(last_move.duck())
+    } else {
+        None
+    };
+
     let indices = ContIndices::new(pos);
     while let Some(mv) = move_picker.next(pos, thread, indices) {
         let (src, dest, duck) = (mv.src(), mv.dest(), mv.duck());
@@ -364,6 +372,7 @@ fn search<Node: NodeType>(
         much better, so we can skip the rest of them.
         */
         if safe == Bitboard::FULL
+            && last_duck.is_none_or(|ld| ld != duck)
             && depth <= Params::ldp_depth(is_quiet)
             && ducks_by_move[src][dest] >= Params::ldp_threshold(depth, is_quiet, improving) as u8
         {
