@@ -1,5 +1,5 @@
 use crate::board::{Board, MoveFilter, Noisy, Quiet};
-use crate::common::{Move, MoveFlag, Piece};
+use crate::common::{Bitboard, Move, MoveFlag, Piece};
 use crate::position::Position;
 use crate::search::cont::ContIndices;
 use crate::search::{MAX_PLY, Params, ThreadData};
@@ -207,6 +207,7 @@ impl MovePicker {
     #[inline]
     fn score_noisies(&self, board: &Board, thread: &mut ThreadData, start: usize) {
         let moves = thread.move_stack.get_mut();
+        let mut blocking_set: [Bitboard; 64] = [Bitboard::FULL; 64];
 
         for scored in moves[start..].iter_mut() {
             let mv = scored.0;
@@ -214,9 +215,14 @@ impl MovePicker {
                 continue;
             }
 
+            if blocking_set[mv.dest()] == Bitboard::FULL {
+                blocking_set[mv.dest()] = board.slider_blocking_set(board.stm(), mv.dest())
+            }
+
             scored.1 = mvv(board, mv) * 8
                 + thread.history.noisy(board, mv) / 8
-                + thread.history.duck(board, mv) / 8;
+                + thread.history.duck(board, mv) / 8
+                + (blocking_set[mv.dest()] & mv.duck().bitboard()).is_nonempty() as i32 * 1000;
         }
 
         moves[start..].sort_unstable_by_key(|m| Reverse(m.1));

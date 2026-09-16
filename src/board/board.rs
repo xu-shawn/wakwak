@@ -191,6 +191,18 @@ impl Board {
         safe
     }
 
+    pub fn slider_blocking_set(&self, color: Color, sq: Square) -> Bitboard {
+        let blockers = self.colors(color) | self.colors(!color);
+        let sliders = (bishop_attacks(blockers, sq, self.slider_tag)
+            & self.colored_diag_sliders(!color))
+            | (rook_attacks(blockers, sq, self.slider_tag) & self.colored_orth_sliders(!color));
+        let mut safe = Bitboard::EMPTY;
+        for attacker in sliders {
+            safe |= between(sq, attacker);
+        }
+        safe
+    }
+
     #[inline]
     pub fn terminal_state(&self) -> Option<TerminalState> {
         if self.try_king(self.stm).is_none() {
