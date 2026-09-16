@@ -231,8 +231,13 @@ impl Params {
     }
 
     #[inline]
-    pub const fn ldp_threshold(depth: i32, is_quiet: bool, improving: bool) -> i32 {
-        let (base, scale) = match (is_quiet, improving) {
+    pub const fn ldp_threshold(
+        depth: i32,
+        is_quiet: bool,
+        improving: bool,
+        weak_refuted: bool,
+    ) -> i32 {
+        let (base, mut scale) = match (is_quiet, improving) {
             (true, true) => (
                 Self::quiet_ldp_imp_threshold_base(),
                 Self::quiet_ldp_imp_threshold_scale(),
@@ -250,6 +255,10 @@ impl Params {
                 Self::noisy_ldp_threshold_scale(),
             ),
         };
+
+        if weak_refuted {
+            scale /= 2;
+        }
 
         base + scale * depth
     }

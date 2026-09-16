@@ -347,7 +347,8 @@ fn search<Node: NodeType>(
         Duck Refutations: If the opponent immediately refutes a duck move,
         we can skip the rest of the duck moves that don't block the refutation(s).
         */
-        if duck_refutations[dest].0 == piece_move && duck_refutations[dest].1.has(mv.duck()) {
+        let weak_refuted = duck_refutations[dest].1.has(mv.duck());
+        if duck_refutations[dest].0 == piece_move && weak_refuted {
             continue;
         }
 
@@ -366,7 +367,8 @@ fn search<Node: NodeType>(
         */
         if safe == Bitboard::FULL
             && depth <= Params::ldp_depth(is_quiet)
-            && ducks_by_move[src][dest] >= Params::ldp_threshold(depth, is_quiet, improving) as u8
+            && ducks_by_move[src][dest]
+                >= Params::ldp_threshold(depth, is_quiet, improving, weak_refuted) as u8
         {
             continue;
         }
