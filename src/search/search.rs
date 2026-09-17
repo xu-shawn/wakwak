@@ -332,14 +332,13 @@ fn search<Node: NodeType>(
     let mut ducks_by_move: [[u8; Square::COUNT]; Square::COUNT] =
         [[0; Square::COUNT]; Square::COUNT];
     let mut duck_counts: [u8; Square::COUNT] = [0; Square::COUNT];
-    let mut duck_refutations = [(None, Bitboard::EMPTY); Square::COUNT];
+    let mut duck_refutations = [[Bitboard::EMPTY; Square::COUNT]; Square::COUNT];
     let mut duck_safety = [(None, Bitboard::FULL); Square::COUNT];
     let mut flag = TTFlag::Upper;
 
     let indices = ContIndices::new(pos);
     while let Some(mv) = move_picker.next(pos, thread, indices) {
         let (src, dest, duck) = (mv.src(), mv.dest(), mv.duck());
-        let piece_move = Some((src, mv.flag()));
         let is_quiet = mv.flag().is_quiet();
         legal_moves += 1;
 
@@ -347,7 +346,7 @@ fn search<Node: NodeType>(
         Duck Refutations: If the opponent immediately refutes a duck move,
         we can skip the rest of the duck moves that don't block the refutation(s).
         */
-        if duck_refutations[dest].0 == piece_move && duck_refutations[dest].1.has(mv.duck()) {
+        if duck_refutations[src][dest].has(mv.duck()) {
             continue;
         }
 
@@ -439,11 +438,7 @@ fn search<Node: NodeType>(
         if let Some(reply) = thread.stack[ply + 1].mv {
             let refuted = !(between(reply.src(), reply.dest()) | reply.dest() | reply.duck());
 
-            if duck_refutations[dest].0 == piece_move {
-                duck_refutations[dest].1 |= refuted;
-            } else {
-                duck_refutations[dest] = (piece_move, refuted);
-            }
+            duck_refutations[src][dest] |= refuted;
         }
 
         searched_moves += 1;
