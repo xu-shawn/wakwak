@@ -332,7 +332,7 @@ fn search<Node: NodeType>(
     let mut ducks_by_move: [[u8; Square::COUNT]; Square::COUNT] =
         [[0; Square::COUNT]; Square::COUNT];
     let mut duck_counts: [u8; Square::COUNT] = [0; Square::COUNT];
-    let mut duck_refutations = [(None, Bitboard::EMPTY); Square::COUNT];
+    let mut duck_refutations = [(None, Bitboard::EMPTY, Bitboard::FULL); Square::COUNT];
     let mut duck_safety = [(None, Bitboard::FULL); Square::COUNT];
     let mut flag = TTFlag::Upper;
 
@@ -348,6 +348,10 @@ fn search<Node: NodeType>(
         we can skip the rest of the duck moves that don't block the refutation(s).
         */
         if duck_refutations[dest].0 == piece_move && duck_refutations[dest].1.has(mv.duck()) {
+            continue;
+        }
+
+        if depth < 3 && !duck_refutations[dest].2.has(mv.duck()) {
             continue;
         }
 
@@ -441,8 +445,9 @@ fn search<Node: NodeType>(
 
             if duck_refutations[dest].0 == piece_move {
                 duck_refutations[dest].1 |= refuted;
+                duck_refutations[dest].2 &= reply.duck().bitboard();
             } else {
-                duck_refutations[dest] = (piece_move, refuted);
+                duck_refutations[dest] = (piece_move, refuted, reply.duck().bitboard());
             }
         }
 
